@@ -26,6 +26,6 @@ This project demonstrates the core principles of Machine Learning by building a 
 
 ---
 
-## 📂 Project Structure
+
 
 
