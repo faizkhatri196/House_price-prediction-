@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Home Value Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-glass: rgba(22, 24, 30, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --accent: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.5);
+            --accent-hover: #3a7bd5;
+            --text-main: #f0f4f8;
+            --text-muted: #a0aec0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #121c22);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            background: -webkit-linear-gradient(0deg, #fff, #a2b2ca);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        input,
+        select {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 0.9rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        select option {
+            background-color: #203a43;
+            color: #fff;
+        }
+
+        .btn-predict {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .btn-predict:active {
+            transform: translateY(1px);
+        }
+
+        #result-container {
+            margin-top: 2rem;
+            padding: 2rem;
+            border-radius: 16px;
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid var(--accent-glow);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+        }
+
+        #result-container.show {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .result-price {
+            font-size: 3rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .loader {
+            display: none;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--accent);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Real Estate Value Predictor</h1>
+        <p class="subtitle">AI-Powered Predictive Modeling for Indian Markets</p>
+
+        <form id="prediction-form">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="city">City</label>
+                    <select id="city" required>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Ahmedabad">Ahmedabad</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="area_type">Area Type</label>
+                    <select id="area_type" required>
+                        <option value="Premium">Premium</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Budget">Budget</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="size">Size (sq ft)</label>
+                    <input type="number" id="size" placeholder="e.g. 1500" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <input type="number" id="bedrooms" min="1" max="10" placeholder="Number of Bedrooms" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="bathrooms">Bathrooms</label>
+                    <input type="number" id="bathrooms" min="1" max="10" placeholder="Number of Bathrooms" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="kitchens">Kitchens</label>
+                    <input type="number" id="kitchens" min="1" max="5" placeholder="Number of Kitchens" required>
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1; max-width: 50%;">
+                    <label for="age">Property Age (years)</label>
+                    <input type="number" id="age" min="0" max="100" placeholder="e.g. 5" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-predict" id="submit-btn">
+                <span>Forecast Price</span>
+                <div class="loader" id="btn-loader"></div>
+            </button>
+        </form>
+
+        <div id="result-container">
+            <div class="result-label">Estimated Market Value</div>
+            <div class="result-price" id="result-price">₹ 0.00</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = submitBtn.querySelector('span');
+            const loader = document.getElementById('btn-loader');
+            const resultContainer = document.getElementById('result-container');
+
+            // UI loading state
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            submitBtn.disabled = true;
+            resultContainer.classList.remove('show');
+
+            const payload = {
+                City: document.getElementById('city').value,
+                Area_Type: document.getElementById('area_type').value,
+                Size_sqft: document.getElementById('size').value,
+                Bedrooms: document.getElementById('bedrooms').value,
+                Bathrooms: document.getElementById('bathrooms').value,
+                Kitchens: document.getElementById('kitchens').value,
+                Age_years: document.getElementById('age').value
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('result-price').innerText = data.price;
+                    resultContainer.classList.add('show');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection to prediction server failed.');
+            } finally {
+                // Restore UI
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
