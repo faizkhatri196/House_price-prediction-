@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: estatemind-3d-realestate
+    env: python
+    buildCommand: "pip install -r requirements.txt && python generate_advanced_dataset.py && python advanced_house_predict.py"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 4"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

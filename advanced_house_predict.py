@@ -1,110 +1,79 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import os
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, VotingRegressor
 from sklearn.metrics import mean_squared_error, r2_score
-import os
 
-print("--- Advanced House Price Prediction Model ---")
+print("--- Advanced Real Estate Price Prediction Pipeline ---")
 
-# 1. Load the dataset
 dataset_path = 'india_house_prices.csv'
 if not os.path.exists(dataset_path):
-    print(f"Error: Dataset not found at {dataset_path}. Please run generate_dataset.py first.")
-    exit()
+    print("Generating dataset first...")
+    import generate_advanced_dataset
 
 data = pd.read_csv(dataset_path)
-print("\nDataset Info:")
-print(data.info())
-print("\nFirst 5 records:")
-print(data.head())
+print(f"Loaded dataset: {data.shape[0]} rows, {data.shape[1]} columns.")
 
-# 2. Separate Features and Target
-X = data.drop('Price_INR', axis=1)
-y = data['Price_INR']
+# Features & Target
+target_col = 'Price_INR'
+X = data.drop(columns=[target_col, 'Country', 'State'])
+y = data[target_col]
 
-# 3. Define Preprocessing Steps
-categorical_cols = ['City', 'Area_Type']
-numerical_cols = ['Size_sqft', 'Bedrooms', 'Kitchens', 'Bathrooms', 'Age_years']
+# Identify categorical and numerical columns
+categorical_cols = X.select_dtypes(include=['object']).columns.tolist()
+numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-# OneHot encode categorical features, Standardize numerical features
+print(f"Categorical features ({len(categorical_cols)}): {categorical_cols}")
+print(f"Numerical features ({len(numerical_cols)}): {numerical_cols}")
+
+# Column Transformer setup
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), numerical_cols),
-        ('cat', OneHotEncoder(drop='first'), categorical_cols) # drop='first' avoids dummy variable trap
-    ])
+        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_cols)
+    ]
+)
 
-# 4. Create a modeling pipeline
-# Random Forest is a powerful, non-linear model handling complex interactions well
+# Ensemble Regressor (Random Forest + Gradient Boosting)
+rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
+
+ensemble_regressor = VotingRegressor(estimators=[('rf', rf), ('gb', gb)])
+
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('regressor', RandomForestRegressor(n_estimators=100, random_state=42))
+    ('regressor', ensemble_regressor)
 ])
 
-# 5. Split data into train and test sets
+# Train test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 6. Train the Model
-print("\nTraining Advanced Random Forest Model... Please wait...")
+print("\nTraining Ensemble AI Real Estate Model...")
 model_pipeline.fit(X_train, y_train)
-print("Model Training Complete.")
 
-# 7. Evaluate the Model
+# Evaluation
 y_pred = model_pipeline.predict(X_test)
 r2 = r2_score(y_test, y_pred)
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
-print(f"\n--- Model Evaluation on Test Data ---")
-print(f"R-squared Score: {r2:.4f} (Closer to 1 is better)")
-import joblib
-print(f"Root Mean Squared Error (RMSE): Rs. {rmse:,.2f}")
+print(f"\nModel Evaluation Metrics:")
+print(f"R2 Score: {r2:.4f}")
+print(f"RMSE: Rs. {rmse:,.2f}")
 
-# Save the trained model wrapper
-joblib.dump(model_pipeline, 'house_model.pkl')
-print("\n[+] Model saved to 'house_model.pkl'")
+# Save feature metadata along with model
+model_payload = {
+    'pipeline': model_pipeline,
+    'categorical_cols': categorical_cols,
+    'numerical_cols': numerical_cols,
+    'all_feature_cols': X.columns.tolist(),
+    'r2_score': r2,
+    'rmse': rmse
+}
 
-# 8. Feature Importance
-cat_encoder = model_pipeline.named_steps['preprocessor'].named_transformers_['cat']
-cat_features = cat_encoder.get_feature_names_out(categorical_cols)
-all_feature_names = numerical_cols + list(cat_features)
-
-importances = model_pipeline.named_steps['regressor'].feature_importances_
-
-# Sort feature importances
-indices = np.argsort(importances)[::-1]
-print("\n--- Top 5 Feature Importances ---")
-for i in range(5):
-    print(f"{all_feature_names[indices[i]]}: {importances[indices[i]]:.4f}")
-
-
-# 9. Function for Interactive Prediction
-def predict_house_price(city, area_type, size, bedrooms, kitchens, bathrooms, age):
-    input_data = pd.DataFrame({
-        'City': [city],
-        'Area_Type': [area_type],
-        'Size_sqft': [size],
-        'Bedrooms': [bedrooms],
-        'Kitchens': [kitchens],
-        'Bathrooms': [bathrooms],
-        'Age_years': [age]
-    })
-    
-    prediction = model_pipeline.predict(input_data)[0]
-    return prediction
-
-# Example Prediction
-print("\n--- Example Prediction ---")
-sample_city = 'Bangalore'
-sample_area = 'Premium'
-sample_size = 1800
-sample_beds = 3
-sample_kitch = 1
-sample_baths = 2
-sample_age = 5
-
-predicted_price = predict_house_price(sample_city, sample_area, sample_size, sample_beds, sample_kitch, sample_baths, sample_age)
-print(f"Predicted Price for {sample_beds} BHK, {sample_size} sqft in {sample_city} ({sample_area} area): Rs. {predicted_price:,.2f}")
+joblib.dump(model_payload, 'house_model.pkl')
+print("\n[+] Saved model payload to 'house_model.pkl'")

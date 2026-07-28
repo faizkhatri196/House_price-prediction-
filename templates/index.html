@@ -1,341 +1,568 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Home Value Predictor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-glass: rgba(22, 24, 30, 0.65);
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --accent: #00d2ff;
-            --accent-glow: rgba(0, 210, 255, 0.5);
-            --accent-hover: #3a7bd5;
-            --text-main: #f0f4f8;
-            --text-muted: #a0aec0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EstateMind 3D — Next-Gen AI Real Estate Platform</title>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Outfit', sans-serif;
-        }
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-        body {
-            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #121c22);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        @keyframes gradientBG {
-            0% {
-                background-position: 0% 50%;
-            }
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .container {
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 3rem;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
-        }
-
-        h1 {
-            font-weight: 600;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            text-align: center;
-            background: -webkit-linear-gradient(0deg, #fff, #a2b2ca);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            font-weight: 300;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-        }
-
-        input,
-        select {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
-            padding: 0.9rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            outline: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        select option {
-            background-color: #203a43;
-            color: #fff;
-        }
-
-        .btn-predict {
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            width: 100%;
-            margin-top: 2rem;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
-        }
-
-        .btn-predict:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
-        }
-
-        .btn-predict:active {
-            transform: translateY(1px);
-        }
-
-        #result-container {
-            margin-top: 2rem;
-            padding: 2rem;
-            border-radius: 16px;
-            background: rgba(0, 210, 255, 0.1);
-            border: 1px solid var(--accent-glow);
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            display: none;
-        }
-
-        #result-container.show {
-            opacity: 1;
-            transform: translateY(0);
-            display: block;
-        }
-
-        .result-label {
-            font-size: 1rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .result-price {
-            font-size: 3rem;
-            font-weight: 600;
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .loader {
-            display: none;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top: 3px solid var(--accent);
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+  <!-- Custom Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-
 <body>
 
-    <div class="container">
-        <h1>Real Estate Value Predictor</h1>
-        <p class="subtitle">AI-Powered Predictive Modeling for Indian Markets</p>
+  <!-- Background Animated Mesh -->
+  <div class="bg-mesh"></div>
 
-        <form id="prediction-form">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="city">City</label>
-                    <select id="city" required>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Ahmedabad">Ahmedabad</option>
-                    </select>
-                </div>
+  <!-- Glassmorphic Sticky Navbar -->
+  <nav class="navbar">
+    <a href="#" class="brand-logo">
+      <i class="fas fa-building-user"></i> EstateMind <span>3D</span>
+    </a>
 
-                <div class="input-group">
-                    <label for="area_type">Area Type</label>
-                    <select id="area_type" required>
-                        <option value="Premium">Premium</option>
-                        <option value="Standard">Standard</option>
-                        <option value="Budget">Budget</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="size">Size (sq ft)</label>
-                    <input type="number" id="size" placeholder="e.g. 1500" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="bedrooms">Bedrooms</label>
-                    <input type="number" id="bedrooms" min="1" max="10" placeholder="Number of Bedrooms" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="bathrooms">Bathrooms</label>
-                    <input type="number" id="bathrooms" min="1" max="10" placeholder="Number of Bathrooms" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="kitchens">Kitchens</label>
-                    <input type="number" id="kitchens" min="1" max="5" placeholder="Number of Kitchens" required>
-                </div>
-
-                <div class="input-group" style="grid-column: 1 / -1; max-width: 50%;">
-                    <label for="age">Property Age (years)</label>
-                    <input type="number" id="age" min="0" max="100" placeholder="e.g. 5" required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-predict" id="submit-btn">
-                <span>Forecast Price</span>
-                <div class="loader" id="btn-loader"></div>
-            </button>
-        </form>
-
-        <div id="result-container">
-            <div class="result-label">Estimated Market Value</div>
-            <div class="result-price" id="result-price">₹ 0.00</div>
-        </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('tab-predictor')"><i class="fas fa-calculator"></i> Price Predictor</button>
+      <button class="nav-tab" onclick="switchTab('tab-3d')"><i class="fas fa-cube"></i> 3D Home</button>
+      <button class="nav-tab" onclick="switchTab('tab-map')"><i class="fas fa-map-marked-alt"></i> Smart Map</button>
+      <button class="nav-tab" onclick="switchTab('tab-investment')"><i class="fas fa-chart-line"></i> Investment</button>
+      <button class="nav-tab" onclick="switchTab('tab-floorplan')"><i class="fas fa-drafting-compass"></i> Floor Plan</button>
+      <button class="nav-tab" onclick="switchTab('tab-construction')"><i class="fas fa-hammer"></i> Construction</button>
+      <button class="nav-tab" onclick="switchTab('tab-copilot')"><i class="fas fa-robot"></i> AI Copilot</button>
     </div>
 
-    <script>
-        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+  </nav>
 
-            const submitBtn = document.getElementById('submit-btn');
-            const btnText = submitBtn.querySelector('span');
-            const loader = document.getElementById('btn-loader');
-            const resultContainer = document.getElementById('result-container');
+  <div class="container">
 
-            // UI loading state
-            btnText.style.display = 'none';
-            loader.style.display = 'block';
-            submitBtn.disabled = true;
-            resultContainer.classList.remove('show');
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <h1 class="hero-title">Predict Prices. Design in 3D. <span>AI Real Estate Platform</span></h1>
+      <p class="hero-subtitle">Valuation & architectural intelligence across all Indian states, major cities, districts, and villages.</p>
+    </header>
 
-            const payload = {
-                City: document.getElementById('city').value,
-                Area_Type: document.getElementById('area_type').value,
-                Size_sqft: document.getElementById('size').value,
-                Bedrooms: document.getElementById('bedrooms').value,
-                Bathrooms: document.getElementById('bathrooms').value,
-                Kitchens: document.getElementById('kitchens').value,
-                Age_years: document.getElementById('age').value
-            };
+    <!-- ==================== TAB 1: HOUSE PRICE PREDICTOR ==================== -->
+    <div id="tab-predictor" class="tab-pane active">
+      <div class="glass-card">
+        <h3 class="card-title"><i class="fas fa-sliders-h"></i> Property Location & Attributes</h3>
 
-            try {
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+        <form id="prediction-form" onsubmit="event.preventDefault(); runPrediction();">
+          <div class="form-grid">
+            <!-- Cascading Location Details -->
+            <div class="form-group">
+              <label><i class="fas fa-map-marked"></i> State</label>
+              <select id="inp-state" class="form-control" onchange="onStateChange()"></select>
+            </div>
 
-                const data = await response.json();
+            <div class="form-group">
+              <label><i class="fas fa-city"></i> City / District</label>
+              <select id="inp-city" class="form-control" onchange="onCityChange()"></select>
+            </div>
 
-                if (response.ok) {
-                    document.getElementById('result-price').innerText = data.price;
-                    resultContainer.classList.add('show');
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Connection to prediction server failed.');
-            } finally {
-                // Restore UI
-                btnText.style.display = 'block';
-                loader.style.display = 'none';
-                submitBtn.disabled = false;
-            }
+            <div class="form-group">
+              <label><i class="fas fa-map-pin"></i> Locality / Village</label>
+              <select id="inp-locality" class="form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-ruler-combined"></i> Area Type</label>
+              <select id="inp-area-type" class="form-control">
+                <option value="Super Built-up">Super Built-up Area</option>
+                <option value="Carpet Area">Carpet Area</option>
+                <option value="Plot Area">Plot Area</option>
+              </select>
+            </div>
+
+            <!-- Size & Structure Details -->
+            <div class="form-group">
+              <label><i class="fas fa-vector-square"></i> Built-up Area (sqft)</label>
+              <input type="number" id="inp-builtup" class="form-control" value="1650">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-bed"></i> Bedrooms (BHK)</label>
+              <input type="number" id="inp-bedrooms" class="form-control" value="3" min="1" max="8">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-bath"></i> Bathrooms</label>
+              <input type="number" id="inp-bathrooms" class="form-control" value="2" min="1" max="8">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-building"></i> Floor Number</label>
+              <input type="number" id="inp-floor-num" class="form-control" value="3">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-compass"></i> Facing Direction</label>
+              <select id="inp-facing" class="form-control">
+                <option value="North-East">North-East (Best Vastu)</option>
+                <option value="East">East</option>
+                <option value="North">North</option>
+                <option value="West">West</option>
+                <option value="South">South</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-couch"></i> Furnishing</label>
+              <select id="inp-furnishing" class="form-control">
+                <option value="Semi-Furnished">Semi-Furnished</option>
+                <option value="Fully-Furnished">Fully-Furnished</option>
+                <option value="Unfurnished">Unfurnished</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-history"></i> Property Age (Years)</label>
+              <input type="number" id="inp-age" class="form-control" value="2" min="0" max="40">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-microchip"></i> Smart Features</label>
+              <div style="display:flex; gap: 0.5rem; margin-top: 0.2rem; flex-wrap:wrap;">
+                <label><input type="checkbox" id="inp-smarthome" checked> Smart Home</label>
+                <label><input type="checkbox" id="inp-solar"> Solar</label>
+                <label><input type="checkbox" id="inp-ev" checked> EV Charger</label>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; text-align: center;">
+            <button type="submit" class="btn-primary"><i class="fas fa-brain"></i> Predict House Price & AI Metrics</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results Display -->
+      <div class="results-grid" id="results-panel" style="display: none;">
+        <div class="price-box">
+          <span class="score-badge"><i class="fas fa-check-circle"></i> <span id="res-confidence">95.2%</span> AI Confidence</span>
+          <div class="price-val" id="res-price">₹ 1,12,50,000</div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">
+            Range: <strong id="res-range" style="color:var(--text-main)">₹ 1.05 Cr - ₹ 1.18 Cr</strong>
+          </div>
+
+          <div class="scores-row">
+            <div class="score-card">
+              <div class="val" id="res-score-invest">92</div>
+              <div class="lbl">Investment</div>
+            </div>
+            <div class="score-card">
+              <div class="val" id="res-score-family">88</div>
+              <div class="lbl">Family</div>
+            </div>
+            <div class="score-card">
+              <div class="val" id="res-score-luxury">85</div>
+              <div class="lbl">Luxury</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3 class="card-title"><i class="fas fa-lightbulb"></i> Prediction Explainability Breakdown</h3>
+          <ul id="res-factors-list" style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem;"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: INTERACTIVE 3D EXPERIENCE ==================== -->
+    <div id="tab-3d" class="tab-pane">
+      <div class="glass-card" style="padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 class="card-title" style="margin-bottom:0;"><i class="fas fa-cube"></i> Photo-Realistic 3D House Visualiser</h3>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn-secondary" onclick="threeEngine.setCameraMode('orbit')"><i class="fas fa-sync"></i> Orbit</button>
+            <button class="btn-secondary" onclick="threeEngine.setCameraMode('drone')"><i class="fas fa-drone"></i> Drone</button>
+            <button class="btn-secondary" onclick="threeEngine.setCameraMode('walkthrough')"><i class="fas fa-walking"></i> Walk</button>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <div id="three-canvas"></div>
+          
+          <div class="3d-controls-overlay">
+            <div class="controls-group">
+              <button class="chip active" onclick="threeEngine.buildHouseStyle('Modern')">Modern</button>
+              <button class="chip" onclick="threeEngine.buildHouseStyle('Traditional')">Traditional</button>
+              <button class="chip" onclick="threeEngine.buildHouseStyle('Japanese')">Japanese</button>
+            </div>
+
+            <div class="controls-group">
+              <button class="chip" onclick="threeEngine.setEnvironmentLighting('day')"><i class="fas fa-sun"></i> Day</button>
+              <button class="chip" onclick="threeEngine.setEnvironmentLighting('sunset')"><i class="fas fa-cloud-sun"></i> Sunset</button>
+              <button class="chip" onclick="threeEngine.setEnvironmentLighting('night')"><i class="fas fa-moon"></i> Night</button>
+              <button class="chip" onclick="threeEngine.setWeather('rain')"><i class="fas fa-cloud-showers-heavy"></i> Rain</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Material Customizer Controls -->
+        <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; background: rgba(15,23,42,0.5); padding: 0.85rem; border-radius: var(--radius-md); border: var(--glass-border);">
+          <div>
+            <label style="font-size:0.78rem; color:var(--text-muted);">Wall Paint</label><br>
+            <input type="color" value="#f1f5f9" onchange="threeEngine.setWallColor(this.value)">
+          </div>
+          <div>
+            <label style="font-size:0.78rem; color:var(--text-muted);">Accent Trim</label><br>
+            <input type="color" value="#9a3412" onchange="threeEngine.setAccentColor(this.value)">
+          </div>
+          <div>
+            <label style="font-size:0.78rem; color:var(--text-muted);">Roof Tiles</label><br>
+            <input type="color" value="#1e293b" onchange="threeEngine.setRoofColor(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: REAL-TIME SMART MAP ==================== -->
+    <div id="tab-map" class="tab-pane">
+      <div class="glass-card" style="padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 class="card-title" style="margin-bottom:0;"><i class="fas fa-map-marked-alt"></i> Location Intelligence Map</h3>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn-secondary" onclick="mapEngine.switchTileLayer('street')"><i class="fas fa-road"></i> Street</button>
+            <button class="btn-secondary" onclick="mapEngine.switchTileLayer('satellite')"><i class="fas fa-satellite"></i> Satellite</button>
+          </div>
+        </div>
+
+        <div id="map-container"></div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: INVESTMENT & PRICE FORECAST ==================== -->
+    <div id="tab-investment" class="tab-pane">
+      <div class="results-grid">
+        <div class="glass-card">
+          <h3 class="card-title"><i class="fas fa-chart-line"></i> Multi-Year Price Forecast & CAGR</h3>
+          <div style="height: 340px;">
+            <canvas id="chart-forecast"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3 class="card-title"><i class="fas fa-calculator"></i> Mortgage Loan EMI Calculator</h3>
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label>Loan Amount (₹)</label>
+            <input type="number" id="mort-amount" class="form-control" value="8000000" oninput="updateMortgageCalc()">
+          </div>
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label>Interest Rate (% p.a.)</label>
+            <input type="number" id="mort-rate" class="form-control" value="8.5" step="0.1" oninput="updateMortgageCalc()">
+          </div>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label>Tenure (Years)</label>
+            <input type="number" id="mort-tenure" class="form-control" value="20" oninput="updateMortgageCalc()">
+          </div>
+
+          <div style="background: rgba(59,130,246,0.12); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(59,130,246,0.3); text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Monthly EMI Payable</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-primary);" id="mort-emi-val">₹ 69,426</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 5: AI FLOOR PLAN GENERATOR ==================== -->
+    <div id="tab-floorplan" class="tab-pane">
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 class="card-title" style="margin-bottom:0;"><i class="fas fa-drafting-compass"></i> Intelligent Vastu Floor Plan</h3>
+          <button class="btn-primary" style="width:auto;" onclick="generateFloorPlan()"><i class="fas fa-magic"></i> Generate Layout</button>
+        </div>
+
+        <div style="width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: var(--glass-border);">
+          <canvas id="floorplan-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 6: CONSTRUCTION COST ESTIMATOR ==================== -->
+    <div id="tab-construction" class="tab-pane">
+      <div class="results-grid">
+        <div class="glass-card">
+          <h3 class="card-title"><i class="fas fa-hammer"></i> Construction Estimator</h3>
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label>Built-up Area (sqft)</label>
+            <input type="number" id="const-area" class="form-control" value="1800" oninput="calculateConstructionCost()">
+          </div>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label>Construction Quality</label>
+            <select id="const-quality" class="form-control" onchange="calculateConstructionCost()">
+              <option value="Premium">Premium Package (₹ 2,500 / sqft)</option>
+              <option value="Standard">Standard Package (₹ 1,800 / sqft)</option>
+              <option value="Luxury">Luxury Package (₹ 3,800 / sqft)</option>
+            </select>
+          </div>
+
+          <div style="text-align: center; background: rgba(16,185,129,0.12); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(16,185,129,0.3);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Estimated Construction Cost</div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--accent-emerald);" id="const-total-val">₹ 45,00,000</div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3 class="card-title"><i class="fas fa-chart-pie"></i> Cost Breakdown</h3>
+          <div style="height: 300px;">
+            <canvas id="chart-construction"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 7: AI COPILOT CHAT ==================== -->
+    <div id="tab-copilot" class="tab-pane">
+      <div class="glass-card ai-chat-box">
+        <h3 class="card-title"><i class="fas fa-robot"></i> EstateMind AI Assistant & Copilot</h3>
+
+        <div class="chip-group">
+          <button class="chip" onclick="aiAssistant.sendMessage('Which state/city in India has the highest appreciation?')">Highest appreciation cities</button>
+          <button class="chip" onclick="aiAssistant.sendMessage('What are the best investment opportunities in tier-2 cities and villages?')">Village vs Tier-2 investing</button>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-bubble ai">
+            Hello! I am your <strong>EstateMind AI Assistant</strong>. Ask me any real estate question regarding property valuation, 3D architectural styles, construction costs, or investment advice!
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" class="form-control" placeholder="Ask EstateMind AI anything...">
+          <button class="btn-primary" id="chat-send-btn" style="width:auto;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CDN Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Platform Engines -->
+  <script src="{{ url_for('static', filename='js/three_engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/map_engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/floorplan_engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/ai_assistant.js') }}"></script>
+
+  <!-- Application Controller -->
+  <script>
+    let threeEngine, mapEngine, dashboardEngine, floorplanEngine, aiAssistant;
+    let geographyData = {};
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      threeEngine = new ThreeHouseEngine('three-canvas');
+      mapEngine = new MapIntelligenceEngine('map-container');
+      dashboardEngine = new InvestmentDashboardEngine();
+      floorplanEngine = new FloorPlanEngine('floorplan-canvas');
+      aiAssistant = new AIAssistantEngine('chat-messages', 'chat-input', 'chat-send-btn');
+
+      await loadGeographyData();
+
+      calculateConstructionCost();
+      updateMortgageCalc();
+      generateFloorPlan();
+      fetchForecastChart(8500000);
+    });
+
+    async function loadGeographyData() {
+      try {
+        const res = await fetch('/api/geography');
+        const data = await res.json();
+        if (data.success) {
+          geographyData = data.geography;
+          populateStates();
+        }
+      } catch (e) {
+        console.error("Error loading geography data:", e);
+      }
+    }
+
+    function populateStates() {
+      const stateSelect = document.getElementById('inp-state');
+      stateSelect.innerHTML = '';
+      Object.keys(geographyData).forEach(state => {
+        const opt = document.createElement('option');
+        opt.value = state;
+        opt.innerText = state;
+        stateSelect.appendChild(opt);
+      });
+      onStateChange();
+    }
+
+    function onStateChange() {
+      const state = document.getElementById('inp-state').value;
+      const citySelect = document.getElementById('inp-city');
+      citySelect.innerHTML = '';
+
+      const cities = geographyData[state] || {};
+      Object.keys(cities).forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.innerText = city;
+        citySelect.appendChild(opt);
+      });
+      onCityChange();
+    }
+
+    function onCityChange() {
+      const state = document.getElementById('inp-state').value;
+      const city = document.getElementById('inp-city').value;
+      const localitySelect = document.getElementById('inp-locality');
+      localitySelect.innerHTML = '';
+
+      const localities = (geographyData[state] && geographyData[state][city]) || ['Central'];
+      localities.forEach(loc => {
+        const opt = document.createElement('option');
+        opt.value = loc;
+        opt.innerText = loc;
+        localitySelect.appendChild(opt);
+      });
+
+      if (mapEngine) mapEngine.setCity(city);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tabId === 'tab-3d' && threeEngine) {
+        setTimeout(() => threeEngine.onWindowResize(), 100);
+      }
+      if (tabId === 'tab-map' && mapEngine) {
+        setTimeout(() => mapEngine.map.invalidateSize(), 100);
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.getElementById('theme-toggle-btn').innerHTML = next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    }
+
+    async function runPrediction() {
+      const payload = {
+        State: document.getElementById('inp-state').value,
+        City: document.getElementById('inp-city').value,
+        Locality: document.getElementById('inp-locality').value,
+        Area_Type: document.getElementById('inp-area-type').value,
+        Builtup_Area_sqft: document.getElementById('inp-builtup').value,
+        Bedrooms: document.getElementById('inp-bedrooms').value,
+        Bathrooms: document.getElementById('inp-bathrooms').value,
+        Floor_Number: document.getElementById('inp-floor-num').value,
+        Facing_Direction: document.getElementById('inp-facing').value,
+        Furnishing: document.getElementById('inp-furnishing').value,
+        Property_Age_years: document.getElementById('inp-age').value,
+        Smart_Home: document.getElementById('inp-smarthome').checked ? 1 : 0,
+        Solar_Panels: document.getElementById('inp-solar').checked ? 1 : 0,
+        EV_Charging: document.getElementById('inp-ev').checked ? 1 : 0
+      };
+
+      try {
+        const res = await fetch('/api/predict', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
         });
-    </script>
-</body>
+        const data = await res.json();
 
+        if (data.success) {
+          document.getElementById('results-panel').style.display = 'grid';
+          document.getElementById('res-price').innerText = data.formatted_price;
+          document.getElementById('res-confidence').innerText = data.confidence_score + '%';
+          document.getElementById('res-range').innerText = `${data.price_range.formatted_low} - ${data.price_range.formatted_high}`;
+          
+          document.getElementById('res-score-invest').innerText = data.scores.investment;
+          document.getElementById('res-score-family').innerText = data.scores.family;
+          document.getElementById('res-score-luxury').innerText = data.scores.luxury;
+
+          const list = document.getElementById('res-factors-list');
+          list.innerHTML = '';
+          data.factors_breakdown.forEach(f => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.padding = '0.55rem 0.75rem';
+            li.style.background = 'rgba(15,23,42,0.5)';
+            li.style.borderRadius = 'var(--radius-sm)';
+            li.style.border = 'var(--glass-border)';
+            li.innerHTML = `<span><i class="fas fa-check" style="color:var(--accent-emerald);margin-right:6px;"></i>${f.name}</span><strong style="color:var(--accent-primary)">${f.impact}</strong>`;
+            list.appendChild(li);
+          });
+
+          fetchForecastChart(data.predicted_price);
+        }
+      } catch(e) {
+        alert("Error generating prediction");
+      }
+    }
+
+    async function fetchForecastChart(price) {
+      const res = await fetch('/api/forecast', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ price: price, cagr: 9.5 })
+      });
+      const data = await res.json();
+      if (data.success) {
+        dashboardEngine.initForecastChart('chart-forecast', data.chart_data.years, data.chart_data.prices);
+      }
+    }
+
+    async function calculateConstructionCost() {
+      const area = document.getElementById('const-area').value;
+      const quality = document.getElementById('const-quality').value;
+
+      const res = await fetch('/api/construction-estimate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ builtup_area: area, quality: quality })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('const-total-val').innerText = data.formatted_total;
+        dashboardEngine.initConstructionChart('chart-construction', data.breakdown);
+      }
+    }
+
+    function updateMortgageCalc() {
+      const amt = parseFloat(document.getElementById('mort-amount').value || 0);
+      const rate = parseFloat(document.getElementById('mort-rate').value || 0);
+      const tenure = parseFloat(document.getElementById('mort-tenure').value || 0);
+
+      const res = dashboardEngine.calculateMortgage(amt, rate, tenure);
+      document.getElementById('mort-emi-val').innerText = `₹ ${res.monthlyEmi.toLocaleString()}`;
+    }
+
+    async function generateFloorPlan() {
+      const res = await fetch('/api/floorplan/generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ width: 40, depth: 50, bedrooms: 3, vastu: true })
+      });
+      const data = await res.json();
+      if (data.success && floorplanEngine) {
+        floorplanEngine.setFloorplanData(data.rooms);
+      }
+    }
+  </script>
+</body>
 </html>
