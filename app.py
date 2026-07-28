@@ -7,7 +7,11 @@ import pandas as pd
 import numpy as np
 from flask import Flask, render_template, request, jsonify
 import urllib.request
-import urllib.parse
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 app = Flask(__name__)
 
