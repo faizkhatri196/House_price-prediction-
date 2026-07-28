@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, VotingRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
-print("--- Advanced Real Estate Price Prediction Pipeline ---")
+print("--- EstateMind 3D - Advanced Real Estate AI Training ---")
 
 dataset_path = 'india_house_prices.csv'
 if not os.path.exists(dataset_path):
