@@ -46,11 +46,6 @@ class ThreeHouseEngine {
     this.sunLight.shadow.bias = -0.0002;
     this.scene.add(this.sunLight);
 
-    // Warm Interior Accent Light
-    this.interiorLight = new THREE.PointLight(0xfeb2b2, 1.2, 15);
-    this.interiorLight.position.set(0, 4, 0);
-    this.scene.add(this.interiorLight);
-
     // Weather Particle System
     this.weatherParticles = null;
     this.currentWeather = 'clear';
@@ -60,22 +55,23 @@ class ThreeHouseEngine {
       wallConcrete: new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.35, metalness: 0.05 }),
       wallAccentWood: new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.6, metalness: 0.1 }),
       wallStone: new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8, metalness: 0.05 }),
+      wallBrickRed: new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.85 }),
+      wallFuturisticMetallic: new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 }),
       roofTile: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.2 }),
       roofRedTile: new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.6, metalness: 0.1 }),
+      roofGrassGreen: new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 }),
       glassTinted: new THREE.MeshPhysicalMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.45, roughness: 0.05, transmission: 0.85, thickness: 0.5 }),
-      frameMetal: new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2, metalness: 0.8 }),
       woodDecking: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7, metalness: 0.05 }),
       lawnGrass: new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 }),
       waterPool: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.08, metalness: 0.35, transparent: true, opacity: 0.85 }),
       drivewayAsphalt: new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9, metalness: 0.05 }),
-      solarCells: new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.9, roughness: 0.15 })
+      solarCells: new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.9, roughness: 0.15 }),
+      neonStrip: new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 1.5 })
     };
 
     this.houseGroup = new THREE.Group();
     this.scene.add(this.houseGroup);
-    this.waterTime = 0;
 
-    // Initial Camera Position
     this.camera.position.set(24, 18, 28);
     this.controls.target.set(0, 4, 0);
     this.controls.update();
@@ -91,14 +87,12 @@ class ThreeHouseEngine {
     this.scene.background = new THREE.Color(0x0f172a);
     this.scene.fog = new THREE.FogExp2(0x0f172a, 0.007);
 
-    // Ground Plane Lawn
     const groundGeo = new THREE.PlaneGeometry(120, 120);
     const ground = new THREE.Mesh(groundGeo, this.materials.lawnGrass);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    // Driveway & Pavement
     const driveGeo = new THREE.PlaneGeometry(10, 24);
     const driveway = new THREE.Mesh(driveGeo, this.materials.drivewayAsphalt);
     driveway.rotation.x = -Math.PI / 2;
@@ -117,112 +111,117 @@ class ThreeHouseEngine {
   buildHouseStyle(styleName = 'Modern') {
     this.clearHouse();
 
-    if (styleName === 'Traditional' || styleName === 'Indian Modern') {
-      // Sloped Tile Roof & Courtyard Pillar Architecture
-      const groundFloorGeo = new THREE.BoxGeometry(16, 4.5, 14);
-      const groundFloor = new THREE.Mesh(groundFloorGeo, this.materials.wallStone);
-      groundFloor.position.set(0, 2.25, 0);
-      groundFloor.castShadow = true;
-      groundFloor.receiveShadow = true;
-      this.houseGroup.add(groundFloor);
+    if (styleName === 'Traditional') {
+      // Sloped Red Tile Roof & Stone Masonry Walls
+      const g = new THREE.Mesh(new THREE.BoxGeometry(16, 4.5, 14), this.materials.wallStone);
+      g.position.set(0, 2.25, 0);
+      g.castShadow = true;
+      this.houseGroup.add(g);
 
-      const firstFloorGeo = new THREE.BoxGeometry(14, 4, 12);
-      const firstFloor = new THREE.Mesh(firstFloorGeo, this.materials.wallConcrete);
-      firstFloor.position.set(0, 6.5, 0);
-      firstFloor.castShadow = true;
-      this.houseGroup.add(firstFloor);
-
-      // Sloped Roof
-      const roofGeo = new THREE.ConeGeometry(12.5, 4.5, 4);
-      const roof = new THREE.Mesh(roofGeo, this.materials.roofRedTile);
-      roof.position.set(0, 10.75, 0);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(12.5, 4.5, 4), this.materials.roofRedTile);
+      roof.position.set(0, 6.75, 0);
       roof.rotation.y = Math.PI / 4;
       roof.castShadow = true;
       this.houseGroup.add(roof);
 
-      // Wooden Pillars Porch
-      for (let x of [-6, 6]) {
-        const pillarGeo = new THREE.CylinderGeometry(0.3, 0.3, 4.5);
-        const pillar = new THREE.Mesh(pillarGeo, this.materials.wallAccentWood);
-        pillar.position.set(x, 2.25, 7.5);
-        pillar.castShadow = true;
-        this.houseGroup.add(pillar);
-      }
-
     } else if (styleName === 'Japanese') {
-      // Pagoda Tier Roof & Shoji Wooden Frames
+      // Pagoda Tier Roof & Shoji Timber Frames
       const b1 = new THREE.Mesh(new THREE.BoxGeometry(15, 3.8, 13), this.materials.wallAccentWood);
       b1.position.set(0, 1.9, 0);
-      b1.castShadow = true;
       this.houseGroup.add(b1);
 
       const b2 = new THREE.Mesh(new THREE.BoxGeometry(12, 3.5, 10), this.materials.wallConcrete);
       b2.position.set(0, 5.55, 0);
-      b2.castShadow = true;
       this.houseGroup.add(b2);
 
-      // Tier 1 Roof
       const r1 = new THREE.Mesh(new THREE.BoxGeometry(17, 0.5, 15), this.materials.roofTile);
       r1.position.set(0, 3.8, 0);
       this.houseGroup.add(r1);
 
-      // Tier 2 Roof
       const r2 = new THREE.Mesh(new THREE.BoxGeometry(14, 0.6, 12), this.materials.roofTile);
       r2.position.set(0, 7.3, 0);
       this.houseGroup.add(r2);
 
-    } else {
-      // Modern / Luxury Villa (Cantilever Glass Architecture)
-      const baseFloorGeo = new THREE.BoxGeometry(16, 5, 12);
-      const baseFloor = new THREE.Mesh(baseFloorGeo, this.materials.wallConcrete);
-      baseFloor.position.set(0, 2.5, 0);
-      baseFloor.castShadow = true;
-      baseFloor.receiveShadow = true;
-      this.houseGroup.add(baseFloor);
+    } else if (styleName === 'Minimalist') {
+      // Clean Geometric Monolithic Box
+      const box = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 12), this.materials.wallConcrete);
+      box.position.set(0, 3, 0);
+      box.castShadow = true;
+      this.houseGroup.add(box);
 
-      // Cantilevered Upper Level
-      const upperFloorGeo = new THREE.BoxGeometry(14, 4.5, 14);
-      const upperFloor = new THREE.Mesh(upperFloorGeo, this.materials.wallAccentWood);
-      upperFloor.position.set(2, 7.25, 1);
-      upperFloor.castShadow = true;
-      upperFloor.receiveShadow = true;
-      this.houseGroup.add(upperFloor);
+      const ribbonGlass = new THREE.Mesh(new THREE.BoxGeometry(14, 1.8, 0.2), this.materials.glassTinted);
+      ribbonGlass.position.set(0, 4, 6.1);
+      this.houseGroup.add(ribbonGlass);
 
-      // Flat Roof with Parapet
-      const roofGeo = new THREE.BoxGeometry(17, 0.6, 15);
-      const roof = new THREE.Mesh(roofGeo, this.materials.roofTile);
-      roof.position.set(2, 9.8, 1);
-      roof.castShadow = true;
+    } else if (styleName === 'Scandinavian') {
+      // Steep Pine Gable Roof Structure
+      const body = new THREE.Mesh(new THREE.BoxGeometry(14, 5, 12), this.materials.wallAccentWood);
+      body.position.set(0, 2.5, 0);
+      this.houseGroup.add(body);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(11, 6, 4), this.materials.roofTile);
+      roof.position.set(0, 8, 0);
+      roof.rotation.y = Math.PI / 4;
       this.houseGroup.add(roof);
 
-      // Panoramic Curtain Glass Wall
-      const glassWallGeo = new THREE.BoxGeometry(10, 3.5, 0.2);
-      const glassWall = new THREE.Mesh(glassWallGeo, this.materials.glassTinted);
+    } else if (styleName === 'Indian Modern') {
+      // Courtyard Layout with Jali Accent Screens
+      const body = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 14), this.materials.wallBrickRed);
+      body.position.set(0, 2.5, 0);
+      this.houseGroup.add(body);
+
+      const top = new THREE.Mesh(new THREE.BoxGeometry(12, 4, 10), this.materials.wallConcrete);
+      top.position.set(0, 7, 0);
+      this.houseGroup.add(top);
+
+      const pergola = new THREE.Mesh(new THREE.BoxGeometry(14, 0.3, 12), this.materials.wallAccentWood);
+      pergola.position.set(0, 9.1, 0);
+      this.houseGroup.add(pergola);
+
+    } else if (styleName === 'Eco Green') {
+      // Living Green Roof & Solar Integration
+      const body = new THREE.Mesh(new THREE.BoxGeometry(16, 5.5, 12), this.materials.wallConcrete);
+      body.position.set(0, 2.75, 0);
+      this.houseGroup.add(body);
+
+      const greenRoof = new THREE.Mesh(new THREE.BoxGeometry(16.5, 0.6, 12.5), this.materials.roofGrassGreen);
+      greenRoof.position.set(0, 5.8, 0);
+      this.houseGroup.add(greenRoof);
+
+    } else if (styleName === 'Futuristic') {
+      // Curved Metallic Shell & Neon Strip Light Accent
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(8, 9, 6, 16), this.materials.wallFuturisticMetallic);
+      body.position.set(0, 3, 0);
+      this.houseGroup.add(body);
+
+      const neon = new THREE.Mesh(new THREE.TorusGeometry(8.2, 0.15, 16, 32), this.materials.neonStrip);
+      neon.rotation.x = Math.PI / 2;
+      neon.position.set(0, 3, 0);
+      this.houseGroup.add(neon);
+
+    } else {
+      // Default: Modern Villa (Cantilevered Glass Architecture)
+      const baseFloor = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 12), this.materials.wallConcrete);
+      baseFloor.position.set(0, 2.5, 0);
+      baseFloor.castShadow = true;
+      this.houseGroup.add(baseFloor);
+
+      const upperFloor = new THREE.Mesh(new THREE.BoxGeometry(14, 4.5, 14), this.materials.wallAccentWood);
+      upperFloor.position.set(2, 7.25, 1);
+      upperFloor.castShadow = true;
+      this.houseGroup.add(upperFloor);
+
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(17, 0.6, 15), this.materials.roofTile);
+      roof.position.set(2, 9.8, 1);
+      this.houseGroup.add(roof);
+
+      const glassWall = new THREE.Mesh(new THREE.BoxGeometry(10, 3.5, 0.2), this.materials.glassTinted);
       glassWall.position.set(2, 7.25, 8.1);
       this.houseGroup.add(glassWall);
 
-      // Glass Railing Balcony
-      const balconyFloor = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 4), this.materials.woodDecking);
-      balconyFloor.position.set(-2, 5, 8);
-      this.houseGroup.add(balconyFloor);
-
-      // Swimming Pool & Deck
-      const poolGeo = new THREE.BoxGeometry(9, 0.2, 14);
-      const pool = new THREE.Mesh(poolGeo, this.materials.waterPool);
+      const pool = new THREE.Mesh(new THREE.BoxGeometry(9, 0.2, 14), this.materials.waterPool);
       pool.position.set(14, 0.08, 1);
       this.houseGroup.add(pool);
-
-      const deckGeo = new THREE.BoxGeometry(11, 0.15, 16);
-      const deck = new THREE.Mesh(deckGeo, this.materials.woodDecking);
-      deck.position.set(14, 0.03, 1);
-      deck.receiveShadow = true;
-      this.houseGroup.add(deck);
-
-      // Solar Array Roof Installation
-      const solarGeo = new THREE.BoxGeometry(10, 0.1, 7);
-      const solar = new THREE.Mesh(solarGeo, this.materials.solarCells);
-      solar.position.set(2, 10.2, 1);
-      this.houseGroup.add(solar);
     }
   }
 

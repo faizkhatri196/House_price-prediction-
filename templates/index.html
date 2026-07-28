@@ -58,7 +58,6 @@
 
         <form id="prediction-form" onsubmit="event.preventDefault(); runPrediction();">
           <div class="form-grid">
-            <!-- Cascading Location Details -->
             <div class="form-group">
               <label><i class="fas fa-map-marked"></i> State</label>
               <select id="inp-state" class="form-control" onchange="onStateChange()"></select>
@@ -83,7 +82,6 @@
               </select>
             </div>
 
-            <!-- Size & Structure Details -->
             <div class="form-group">
               <label><i class="fas fa-vector-square"></i> Built-up Area (sqft)</label>
               <input type="number" id="inp-builtup" class="form-control" value="1650">
@@ -145,7 +143,6 @@
         </form>
       </div>
 
-      <!-- Results Display -->
       <div class="results-grid" id="results-panel" style="display: none;">
         <div class="price-box">
           <span class="score-badge"><i class="fas fa-check-circle"></i> <span id="res-confidence">95.2%</span> AI Confidence</span>
@@ -194,9 +191,14 @@
           
           <div class="3d-controls-overlay">
             <div class="controls-group">
-              <button class="chip active" onclick="threeEngine.buildHouseStyle('Modern')">Modern</button>
-              <button class="chip" onclick="threeEngine.buildHouseStyle('Traditional')">Traditional</button>
-              <button class="chip" onclick="threeEngine.buildHouseStyle('Japanese')">Japanese</button>
+              <button class="chip active" onclick="set3dStyle('Modern', this)">Modern</button>
+              <button class="chip" onclick="set3dStyle('Traditional', this)">Traditional</button>
+              <button class="chip" onclick="set3dStyle('Japanese', this)">Japanese</button>
+              <button class="chip" onclick="set3dStyle('Minimalist', this)">Minimalist</button>
+              <button class="chip" onclick="set3dStyle('Scandinavian', this)">Scandinavian</button>
+              <button class="chip" onclick="set3dStyle('Indian Modern', this)">Indian Modern</button>
+              <button class="chip" onclick="set3dStyle('Eco Green', this)">Eco Green</button>
+              <button class="chip" onclick="set3dStyle('Futuristic', this)">Futuristic</button>
             </div>
 
             <div class="controls-group">
@@ -277,9 +279,58 @@
     <!-- ==================== TAB 5: AI FLOOR PLAN GENERATOR ==================== -->
     <div id="tab-floorplan" class="tab-pane">
       <div class="glass-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-          <h3 class="card-title" style="margin-bottom:0;"><i class="fas fa-drafting-compass"></i> Intelligent Vastu Floor Plan</h3>
-          <button class="btn-primary" style="width:auto;" onclick="generateFloorPlan()"><i class="fas fa-magic"></i> Generate Layout</button>
+        <h3 class="card-title"><i class="fas fa-drafting-compass"></i> Interactive AI Floor Plan Layout Studio</h3>
+        
+        <!-- Floor Plan Customizer Toolbar -->
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; background: rgba(15,23,42,0.5); padding: 0.85rem; border-radius: var(--radius-md); border: var(--glass-border); align-items: flex-end;">
+          <div style="flex: 1; min-width: 110px;">
+            <label style="font-size: 0.78rem; color: var(--text-muted);">Plot Width (ft)</label>
+            <input type="number" id="fp-width" class="form-control" value="40" min="20" max="100">
+          </div>
+          <div style="flex: 1; min-width: 110px;">
+            <label style="font-size: 0.78rem; color: var(--text-muted);">Plot Depth (ft)</label>
+            <input type="number" id="fp-depth" class="form-control" value="50" min="20" max="100">
+          </div>
+          <div style="flex: 1; min-width: 110px;">
+            <label style="font-size: 0.78rem; color: var(--text-muted);">Bedrooms (BHK)</label>
+            <select id="fp-bhk" class="form-control">
+              <option value="1">1 BHK</option>
+              <option value="2">2 BHK</option>
+              <option value="3" selected>3 BHK</option>
+              <option value="4">4 BHK</option>
+              <option value="5">5 BHK</option>
+            </select>
+          </div>
+          <div style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.78rem; color: var(--text-muted);">Vastu Mode</label>
+            <select id="fp-vastu" class="form-control">
+              <option value="true">Vastu Compliant</option>
+              <option value="false">Standard Layout</option>
+            </select>
+          </div>
+          <button class="btn-primary" style="width:auto; height: 38px; padding: 0 1.25rem;" onclick="generateFloorPlan()"><i class="fas fa-magic"></i> Generate</button>
+        </div>
+
+        <!-- Add Room & Editing Toolbar -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem; align-items: center;">
+          <select id="add-room-type" class="form-control" style="width: auto; height: 36px; padding: 0 0.75rem;">
+            <option value="Master Bedroom">Master Bedroom</option>
+            <option value="Living Room">Living Room</option>
+            <option value="Kitchen">Kitchen</option>
+            <option value="Bedroom 2">Bedroom 2</option>
+            <option value="Bath & Toilet">Bath & Toilet</option>
+            <option value="Dining Area">Dining Area</option>
+            <option value="Study Room">Study Room</option>
+            <option value="Balcony">Balcony</option>
+            <option value="Pooja Room">Pooja Room</option>
+          </select>
+          <button class="btn-secondary" onclick="addCustomRoom()"><i class="fas fa-plus"></i> Add Room</button>
+          <button class="btn-secondary" style="color: #f43f5e; border-color: rgba(244,63,94,0.3);" onclick="floorplanEngine.deleteSelectedRoom()"><i class="fas fa-trash"></i> Delete Selected</button>
+          <button class="btn-secondary" style="margin-left: auto;" onclick="floorplanEngine.exportPNG()"><i class="fas fa-download"></i> Export PNG</button>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+          💡 <em>Tip: Click and drag any room box on the canvas below to customize your layout position.</em>
         </div>
 
         <div style="width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: var(--glass-border);">
@@ -451,6 +502,16 @@
       }
     }
 
+    function set3dStyle(styleName, btnEl) {
+      if (btnEl) {
+        btnEl.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        btnEl.classList.add('active');
+      }
+      if (threeEngine) {
+        threeEngine.buildHouseStyle(styleName);
+      }
+    }
+
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
@@ -553,14 +614,37 @@
     }
 
     async function generateFloorPlan() {
+      const w = document.getElementById('fp-width').value || 40;
+      const d = document.getElementById('fp-depth').value || 50;
+      const bhk = document.getElementById('fp-bhk').value || 3;
+      const vastu = document.getElementById('fp-vastu').value === 'true';
+
       const res = await fetch('/api/floorplan/generate', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ width: 40, depth: 50, bedrooms: 3, vastu: true })
+        body: JSON.stringify({ width: w, depth: d, bedrooms: bhk, vastu: vastu })
       });
       const data = await res.json();
       if (data.success && floorplanEngine) {
         floorplanEngine.setFloorplanData(data.rooms);
+      }
+    }
+
+    function addCustomRoom() {
+      const roomType = document.getElementById('add-room-type').value;
+      const colorMap = {
+        'Master Bedroom': '#3b82f6',
+        'Living Room': '#8b5cf6',
+        'Kitchen': '#ef4444',
+        'Bedroom 2': '#06b6d4',
+        'Bath & Toilet': '#f59e0b',
+        'Dining Area': '#10b981',
+        'Study Room': '#ec4899',
+        'Balcony': '#6366f1',
+        'Pooja Room': '#eab308'
+      };
+      if (floorplanEngine) {
+        floorplanEngine.addRoom(roomType, 12, 12, colorMap[roomType] || '#3b82f6');
       }
     }
   </script>
