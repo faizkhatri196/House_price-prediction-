@@ -368,14 +368,165 @@ def ai_chat():
 
 @app.route('/api/floorplan/generate', methods=['POST'])
 def generate_floorplan():
-    rooms = [
-        {'name': 'Master Bedroom', 'x': 5, 'y': 5, 'w': 14, 'h': 14, 'color': '#3b82f6'},
-        {'name': 'Living Room', 'x': 20, 'y': 5, 'w': 16, 'h': 18, 'color': '#8b5cf6'},
-        {'name': 'Kitchen', 'x': 5, 'y': 22, 'w': 12, 'h': 12, 'color': '#ef4444'},
-        {'name': 'Bedroom 2', 'x': 20, 'y': 25, 'w': 15, 'h': 14, 'color': '#06b6d4'},
-        {'name': 'Dining Area', 'x': 5, 'y': 36, 'w': 12, 'h': 10, 'color': '#10b981'}
-    ]
-    return jsonify({'success': True, 'rooms': rooms})
+    data = request.json or {}
+    width = float(data.get('width', 40))
+    depth = float(data.get('depth', 50))
+    bhk = int(data.get('bedrooms', 3))
+    vastu = bool(data.get('vastu', True))
+
+    scale_w = width / 40.0
+    scale_h = depth / 50.0
+
+    rooms = []
+
+    if vastu:
+        # Master Bedroom (South-West)
+        rooms.append({
+            'name': 'Master Bedroom',
+            'x': round(2 * scale_w, 1),
+            'y': round(2 * scale_h, 1),
+            'w': round(14 * scale_w, 1),
+            'h': round(14 * scale_h, 1),
+            'color': '#3b82f6',
+            'vastu_note': 'South-West (Master Zone)'
+        })
+
+        # Kitchen (South-East)
+        rooms.append({
+            'name': 'Kitchen',
+            'x': round(18 * scale_w, 1),
+            'y': round(2 * scale_h, 1),
+            'w': round(12 * scale_w, 1),
+            'h': round(12 * scale_h, 1),
+            'color': '#ef4444',
+            'vastu_note': 'South-East (Fire Zone)'
+        })
+
+        # Living Room & Entrance (North-East)
+        rooms.append({
+            'name': 'Living Room',
+            'x': round(2 * scale_w, 1),
+            'y': round(18 * scale_h, 1),
+            'w': round(18 * scale_w, 1),
+            'h': round(15 * scale_h, 1),
+            'color': '#8b5cf6',
+            'vastu_note': 'North-East (Entrance)'
+        })
+
+        # Bath & Toilet (North-West / West)
+        rooms.append({
+            'name': 'Bath & Toilet',
+            'x': round(22 * scale_w, 1),
+            'y': round(16 * scale_h, 1),
+            'w': round(10 * scale_w, 1),
+            'h': round(8 * scale_h, 1),
+            'color': '#f59e0b',
+            'vastu_note': 'North-West (Waste Zone)'
+        })
+
+        # Dining Area
+        rooms.append({
+            'name': 'Dining Area',
+            'x': round(22 * scale_w, 1),
+            'y': round(25 * scale_h, 1),
+            'w': round(11 * scale_w, 1),
+            'h': round(9 * scale_h, 1),
+            'color': '#10b981',
+            'vastu_note': 'West (Dining Zone)'
+        })
+
+        # BHK 2 Room (Guest Bedroom - North-West)
+        if bhk >= 2:
+            rooms.append({
+                'name': 'Bedroom 2',
+                'x': round(2 * scale_w, 1),
+                'y': round(35 * scale_h, 1),
+                'w': round(14 * scale_w, 1),
+                'h': round(13 * scale_h, 1),
+                'color': '#06b6d4',
+                'vastu_note': 'North-West (Guest)'
+            })
+
+        # BHK 3 Room (Children Bedroom - East)
+        if bhk >= 3:
+            rooms.append({
+                'name': 'Bedroom 3 / Study',
+                'x': round(18 * scale_w, 1),
+                'y': round(35 * scale_h, 1),
+                'w': round(14 * scale_w, 1),
+                'h': round(13 * scale_h, 1),
+                'color': '#ec4899',
+                'vastu_note': 'East (Children / Study)'
+            })
+
+        # BHK 4 Room
+        if bhk >= 4:
+            rooms.append({
+                'name': 'Bedroom 4',
+                'x': round(32 * scale_w, 1),
+                'y': round(2 * scale_h, 1),
+                'w': round(12 * scale_w, 1),
+                'h': round(14 * scale_h, 1),
+                'color': '#a855f7',
+                'vastu_note': 'South (Guest Suite)'
+            })
+
+        # BHK 5 Room & Pooja Room
+        if bhk >= 5:
+            rooms.append({
+                'name': 'Bedroom 5',
+                'x': round(32 * scale_w, 1),
+                'y': round(18 * scale_h, 1),
+                'w': round(12 * scale_w, 1),
+                'h': round(14 * scale_h, 1),
+                'color': '#6366f1',
+                'vastu_note': 'North Room'
+            })
+            rooms.append({
+                'name': 'Pooja Room',
+                'x': round(32 * scale_w, 1),
+                'y': round(34 * scale_h, 1),
+                'w': round(8 * scale_w, 1),
+                'h': round(8 * scale_h, 1),
+                'color': '#eab308',
+                'vastu_note': 'North-East (Prayer Zone)'
+            })
+
+    else:
+        # Standard Grid Layout (Non-Vastu)
+        cols = 2 if bhk <= 3 else 3
+        curr_x = 2
+        curr_y = 2
+        r_w = round((width - 8) / cols, 1)
+        r_h = round((depth - 10) / 3, 1)
+
+        names = ['Living Room', 'Kitchen', 'Master Bedroom', 'Bath & Toilet', 'Dining Area']
+        for b in range(2, bhk + 1):
+            names.append(f'Bedroom {b}')
+
+        colors = ['#8b5cf6', '#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#06b6d4', '#ec4899', '#a855f7', '#6366f1']
+
+        for idx, name in enumerate(names):
+            rooms.append({
+                'name': name,
+                'x': round(curr_x, 1),
+                'y': round(curr_y, 1),
+                'w': r_w,
+                'h': r_h,
+                'color': colors[idx % len(colors)]
+            })
+            curr_x += r_w + 2
+            if curr_x + r_w > width:
+                curr_x = 2
+                curr_y += r_h + 2
+
+    return jsonify({
+        'success': True,
+        'plot': {'width': width, 'depth': depth, 'total_sqft': round(width * depth, 0)},
+        'bedrooms': bhk,
+        'vastu': vastu,
+        'rooms': rooms
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

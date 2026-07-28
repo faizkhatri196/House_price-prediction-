@@ -285,15 +285,15 @@
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; background: rgba(15,23,42,0.5); padding: 0.85rem; border-radius: var(--radius-md); border: var(--glass-border); align-items: flex-end;">
           <div style="flex: 1; min-width: 110px;">
             <label style="font-size: 0.78rem; color: var(--text-muted);">Plot Width (ft)</label>
-            <input type="number" id="fp-width" class="form-control" value="40" min="20" max="100">
+            <input type="number" id="fp-width" class="form-control" value="40" min="20" max="100" oninput="generateFloorPlan()">
           </div>
           <div style="flex: 1; min-width: 110px;">
             <label style="font-size: 0.78rem; color: var(--text-muted);">Plot Depth (ft)</label>
-            <input type="number" id="fp-depth" class="form-control" value="50" min="20" max="100">
+            <input type="number" id="fp-depth" class="form-control" value="50" min="20" max="100" oninput="generateFloorPlan()">
           </div>
           <div style="flex: 1; min-width: 110px;">
             <label style="font-size: 0.78rem; color: var(--text-muted);">Bedrooms (BHK)</label>
-            <select id="fp-bhk" class="form-control">
+            <select id="fp-bhk" class="form-control" onchange="generateFloorPlan()">
               <option value="1">1 BHK</option>
               <option value="2">2 BHK</option>
               <option value="3" selected>3 BHK</option>
@@ -303,7 +303,7 @@
           </div>
           <div style="flex: 1; min-width: 120px;">
             <label style="font-size: 0.78rem; color: var(--text-muted);">Vastu Mode</label>
-            <select id="fp-vastu" class="form-control">
+            <select id="fp-vastu" class="form-control" onchange="generateFloorPlan()">
               <option value="true">Vastu Compliant</option>
               <option value="false">Standard Layout</option>
             </select>
